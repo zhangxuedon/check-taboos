@@ -16,7 +16,17 @@ public class IndexController {
    */
   @GetMapping
   public String index() {
-    return "index";
+    return "form";
+  }
+
+  @GetMapping("/form")
+  public String testhtml() {
+    return "form";
+  }
+
+  @GetMapping("/search")
+  public String search() {
+    return "search";
   }
 
 }

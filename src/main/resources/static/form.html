@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>忌口查询小程序</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* 全局样式 */
+    html {
+      font-size: 16px;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 3rem 0 0; /* 将 padding-top 从 2rem 改为 3rem，增加顶部空间 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* 轮播图容器样式 */
+    .slider-container {
+      width: 80%;
+      max-width: 600px;
+      position: relative;
+      margin-bottom: 1.875rem;
+      overflow: hidden;
+    }
+
+    .slider {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .slider img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      aspect-ratio: 2 / 1;
+    }
+
+    /* 轮播图导航按钮样式，初始隐藏 */
+    .prev,
+    .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5rem;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 0.625rem;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .prev {
+      left: 0;
+    }
+
+    .next {
+      right: 0;
+    }
+
+    .slider-container:hover .prev,
+    .slider-container:hover .next {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 搜索框容器样式 */
+    .search-container {
+      width: 90%;
+      max-width: 31.25rem;
+      margin-bottom: 1.875rem;
+      position: relative;
+    }
+
+    /* 搜索框样式 */
+    #search-box {
+      width: 100%;
+      padding: 0.9375rem;
+      border: 1px solid #ccc;
+      border-radius: 0.3125rem;
+      font-size: 1rem;
+      padding-left: 2.5rem;
+      box-sizing: border-box;
+    }
+
+    /* 搜索图标样式 */
+    .search-icon {
+      position: absolute;
+      left: 0.9375rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+      font-size: 1.25rem;
+    }
+
+    /* 搜索按钮样式 */
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 0.3125rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* 搜索结果列表样式 */
+    #result-list {
+      list-style-type: none;
+      padding: 0;
+      width: 90%;
+      max-width: 31.25rem;
+    }
+
+    /* 单个搜索结果样式 */
+    .result-item {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 0.3125rem;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    /* 结果标题样式 */
+    .result-item h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.125rem;
+    }
+
+    /* 结果描述样式 */
+    .result-item p {
+      margin: 0.625rem 0 0;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    /* 信息图标样式 */
+    .info-icon {
+      position: absolute;
+      right: 0.9375rem;
+      top: 0.9375rem;
+      color: #007bff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .info-icon:hover {
+      color: #0056b3;
+    }
+
+    /* 小屏幕设备（如手机）样式调整 */
+    @media (max-width: 480px) {
+      html {
+        font-size: 14px;
+      }
+
+      .search-container,
+      #result-list {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- 轮播图容器 -->
+<div class="slider-container">
+  <div class="slider">
+    <img src="1.png" alt="Healthy Living 1">
+    <img src="7.png" alt="Healthy Living 2">
+    <img src="6.png" alt="Healthy Living 3">
+  </div>
+  <button class="prev" onclick="prevSlide()">&#10094;</button>
+  <button class="next" onclick="nextSlide()">&#10095;</button>
+</div>
+
+<div class="search-container">
+  <input type="text" id="search-box" placeholder="请输入疾病名称">
+  <i class="search-icon fas fa-search"></i>
+</div>
+<button onclick="search()">搜索</button>
+<ul id="result-list">
+
+</ul>
+
+<script>
+  let slideIndex = 0;
+  const slides = document.querySelectorAll('.slider img');
+  const slider = document.querySelector('.slider');
+  const slideWidth = slider.clientWidth;
+
+  function showSlide(index) {
+    const offset = -index * slideWidth;
+    slider.style.transform = `translateX(${offset}px)`;
+  }
+
+  function prevSlide() {
+    slideIndex = (slideIndex - 1 + slides.length) % slides.length;
+    showSlide(slideIndex);
+    resetInterval();
+  }
+
+  function nextSlide() {
+    slideIndex = (slideIndex + 1) % slides.length;
+    showSlide(slideIndex);
+    resetInterval();
+  }
+
+  function autoSlide() {
+    slideIndex = (slideIndex + 1) % slides.length;
+    showSlide(slideIndex);
+  }
+
+  function resetInterval() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(autoSlide, 3000);
+  }
+
+  async function search() {
+    const input = document.getElementById('search-box').value;
+    const resultList = document.getElementById('result-list');
+    resultList.innerHTML = '';
+
+    try {
+      const response = await fetch(`http://localhost/diet-restrictions/disease?diseaseName=${input}`);
+      const data = await response.json();
+
+      data.forEach(result => {
+        const listItem = document.createElement('li');
+        listItem.classList.add('result-item');
+
+        const title = document.createElement('h3');
+        title.textContent = `${result.diseaseName}忌口 - ${result.restrictedFoodName}`;
+
+        const description = document.createElement('p');
+        description.textContent = result.restrictionReason;
+
+        const infoIcon = document.createElement('i');
+        infoIcon.classList.add('info-icon', 'fas', 'fa-info-circle');
+
+        listItem.appendChild(title);
+        listItem.appendChild(description);
+        listItem.appendChild(infoIcon);
+
+        resultList.appendChild(listItem);
+      });
+    } catch (error) {
+      console.error('请求接口出错:', error);
+    }
+  }
+
+  // 初始化自动轮播
+  slideInterval = setInterval(autoSlide, 3000);
+</script>
+</body>
+
+</html>
